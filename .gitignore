@@ -1,0 +1,66 @@
+# Logs directory
+logs/
+
+# Database files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Storage directory contents
+storage/*
+!storage/.gitkeep
+
+# Data directory contents
+data/*
+!data/.gitkeep
+
+# Go build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test coverage
+*.out
+coverage.html
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Docker volumes
+n8n_data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Air (live reload) files
+tmp/
+
+# Go module cache
+go.sum
+
+# Test databases
+*_test.db

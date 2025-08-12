@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+  title: RingTonic Backend API
+  description: Backend API for RingTonic - instant ringtone generation from social media
+  version: 1.0.0
+  contact:
+    name: RingTonic Team
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.ringtonic.com
+    description: Production server
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      description: Returns the health status of the service
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  /metrics:
+    get:
+      summary: Service metrics
+      description: Returns basic service metrics
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_stats:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                    example:
+                      queued: 5
+                      processing: 2
+                      completed: 150
+                      failed: 3
+                  uptime:
+                    type: string
+                    example: "2h30m15s"
+
+  /api/v1/create-ringtone:
+    post:
+      summary: Create ringtone job
+      description: Creates a new job to generate a ringtone from a social media video
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - source_url
+              properties:
+                source_url:
+                  type: string
+                  format: uri
+                  description: URL of the video to extract audio from
+                  example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                user_id:
+                  type: string
+                  description: Optional user identifier
+                  example: "user123"
+                options:
+                  type: object
+                  properties:
+                    start_seconds:
+                      type: integer
+                      minimum: 0
+                      description: Start time in seconds for audio extraction
+                      example: 10
+                    duration_seconds:
+                      type: integer
+                      minimum: 1
+                      maximum: 60
+                      description: Duration in seconds for the ringtone
+                      example: 20
+                    fade_in:
+                      type: boolean
+                      description: Apply fade in effect
+                      default: false
+                    fade_out:
+                      type: boolean
+                      description: Apply fade out effect
+                      default: false
+                    format:
+                      type: string
+                      enum: [mp3, m4a]
+                      description: Output audio format
+                      default: mp3
+      responses:
+        '202':
+          description: Job created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                    description: Unique job identifier
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                  status:
+                    type: string
+                    enum: [queued]
+                    example: queued
+                  poll_url:
+                    type: string
+                    description: URL to poll for job status
+                    example: "/api/v1/job-status/550e8400-e29b-41d4-a716-446655440000"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/job-status/{jobID}:
+    get:
+      summary: Get job status
+      description: Retrieves the current status of a ringtone generation job
+      parameters:
+        - name: jobID
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Job identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Job status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                    format: uuid
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                  status:
+                    type: string
+                    enum: [queued, processing, completed, failed]
+                    example: completed
+                  created_at:
+                    type: string
+                    format: date-time
+                  updated_at:
+                    type: string
+                    format: date-time
+                  download_url:
+                    type: string
+                    description: Download URL (only present when status is completed)
+                    example: "/download/550e8400-e29b-41d4-a716-446655440000.mp3"
+                  error:
+                    type: string
+                    description: Error message (only present when status is failed)
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/n8n-callback:
+    post:
+      summary: n8n workflow callback
+      description: Internal endpoint for n8n to report job completion status
+      security:
+        - WebhookToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - job_id
+                - status
+              properties:
+                job_id:
+                  type: string
+                  format: uuid
+                  description: Job identifier
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                status:
+                  type: string
+                  enum: [completed, failed]
+                  description: Final job status
+                  example: completed
+                file_path:
+                  type: string
+                  description: Path to the generated ringtone file (required for completed status)
+                  example: "550e8400-e29b-41d4-a716-446655440000.mp3"
+                metadata:
+                  type: object
+                  description: Additional metadata about the processed file
+                  properties:
+                    duration:
+                      type: integer
+                      description: Duration in seconds
+                      example: 23
+                    original_title:
+                      type: string
+                      description: Original video title
+                      example: "Never Gonna Give You Up"
+                    file_size:
+                      type: integer
+                      description: File size in bytes
+                      example: 512000
+                    error:
+                      type: string
+                      description: Error message (for failed status)
+      responses:
+        '200':
+          description: Callback processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '401':
+          description: Unauthorized - invalid or missing webhook token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /download/{filename}:
+    get:
+      summary: Download ringtone file
+      description: Downloads a generated ringtone file
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Filename of the ringtone to download
+          example: "550e8400-e29b-41d4-a716-446655440000.mp3"
+      responses:
+        '200':
+          description: File downloaded successfully
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+            audio/mp4:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Attachment with filename
+              example: 'attachment; filename="ringtone.mp3"'
+            Content-Length:
+              schema:
+                type: integer
+              description: File size in bytes
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: File not available (job not completed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Invalid source URL format"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "INVALID_URL"
+
+  securitySchemes:
+    WebhookToken:
+      type: apiKey
+      in: header
+      name: X-Webhook-Token
+      description: Secret token for webhook authentication
+
+tags:
+  - name: Health
+    description: Health and monitoring endpoints
+  - name: Jobs
+    description: Ringtone job management
+  - name: Files
+    description: File download endpoints
+  - name: Internal
+    description: Internal endpoints for service integration
