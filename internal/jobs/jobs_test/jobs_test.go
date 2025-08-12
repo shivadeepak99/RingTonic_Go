@@ -101,6 +101,10 @@ func TestCreateJob(t *testing.T) {
 
 	// Set up mock expectations
 	mockStore.On("CreateJob", mock.AnythingOfType("*store.Job")).Return(nil)
+	// Expectations for the async goroutine
+	mockStore.On("IncrementJobAttempts", mock.AnythingOfType("string")).Return(nil)
+	mockN8N.On("TriggerWebhook", mock.AnythingOfType("map[string]interface {}")).Return(nil)
+	mockStore.On("UpdateJobStatus", mock.AnythingOfType("string"), "processing", (*string)(nil)).Return(nil)
 
 	req := &jobs.CreateJobRequest{
 		SourceURL: "https://www.youtube.com/watch?v=test",
@@ -116,7 +120,11 @@ func TestCreateJob(t *testing.T) {
 	assert.Equal(t, "queued", response.Status)
 	assert.Contains(t, response.PollURL, response.JobID)
 
+	// Wait a bit for the goroutine to complete
+	time.Sleep(100 * time.Millisecond)
+
 	mockStore.AssertExpectations(t)
+	mockN8N.AssertExpectations(t)
 }
 
 func TestGetJobStatus(t *testing.T) {
