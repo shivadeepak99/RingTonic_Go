@@ -10,13 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"ringtonic-backend/internal/api"
-	"ringtonic-backend/internal/config"
-	"ringtonic-backend/internal/files"
-	"ringtonic-backend/internal/jobs"
-	applog "ringtonic-backend/internal/log"
-	"ringtonic-backend/internal/n8n"
-	"ringtonic-backend/internal/store"
+	"RingTonic_Go/internal/api"
+	"RingTonic_Go/internal/config"
+	"RingTonic_Go/internal/files"
+	"RingTonic_Go/internal/jobs"
+	applog "RingTonic_Go/internal/log"
+	"RingTonic_Go/internal/n8n"
+	"RingTonic_Go/internal/store"
 )
 
 func main() {
