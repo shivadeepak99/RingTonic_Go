@@ -15,12 +15,6 @@ import (
 	"ringtonic-backend/internal/log"
 	"ringtonic-backend/internal/store"
 )
-
-// Server represents the HTTP server
-type Server struct {
-	config *Config
-}
-
 // Config holds server configuration
 type Config struct {
 	Database      *store.Store
@@ -29,6 +23,14 @@ type Config struct {
 	Logger        *log.Logger
 	WebhookSecret string
 }
+
+
+// Server represents the HTTP server
+type Server struct {
+	config *Config
+}
+
+
 
 // ErrorResponse represents an API error response
 type ErrorResponse struct {
@@ -49,7 +51,7 @@ type MetricsResponse struct {
 	Uptime   string         `json:"uptime"`
 }
 
-var startTime = time.Now()
+var startTime = time.Now() //right now
 
 // New creates a new API server
 func New(config *Config) *Server {
@@ -68,8 +70,8 @@ func (s *Server) Routes() http.Handler {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
+	r.Use(middleware.RequestID ) //Gives every request a unique ID so you can trace logs.
+	r.Use(middleware.RealIP) //Figures out the real client IP address (even behind proxies).
 	r.Use(s.loggingMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))

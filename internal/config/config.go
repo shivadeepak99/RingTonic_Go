@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-// Config holds all configuration for the application
+// the struct for Configurations !
 type Config struct {
 	Port             string
 	DBPath           string
@@ -14,10 +14,11 @@ type Config struct {
 	LogLevel         string
 }
 
-// Load reads configuration from environment variables
+ 
 func Load() *Config {
+	/* This contains the env setup , here it will return  the retrieved cred from .env or default value*/
 	return &Config{
-		Port:             getEnv("BACKEND_PORT", "8080"),
+		Port:             getEnv("BACKEND_PORT", "8081"),
 		DBPath:           getEnv("DB_PATH", "./data/ringtonic.db"),
 		StoragePath:      getEnv("STORAGE_PATH", "./storage"),
 		N8NWebhookURL:    getEnv("N8N_WEBHOOK_URL", "http://n8n:5678/webhook/ringtonic"),
@@ -26,8 +27,9 @@ func Load() *Config {
 	}
 }
 
-// getEnv returns the value of an environment variable or a default value
+
 func getEnv(key, defaultValue string) string {
+	// getEnv returns the value of an environment variable or a default value
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
