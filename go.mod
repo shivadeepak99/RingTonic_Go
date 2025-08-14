@@ -8,8 +8,8 @@ require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
-	github.com/mattn/go-sqlite3 v1.14.18
 	github.com/stretchr/testify v1.8.4
+	modernc.org/sqlite v1.38.2
 )
 
 require (
@@ -26,5 +26,4 @@ require (
 	modernc.org/libc v1.66.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.38.2 // indirect
 )
