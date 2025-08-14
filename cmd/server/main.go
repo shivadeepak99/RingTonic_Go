@@ -68,6 +68,7 @@ func main() {
 		Logger:        logger,
 		WebhookSecret: cfg.N8NWebhookSecret,
 	})
+	
 
 	// Start HTTP server
 	httpServer := &http.Server{
